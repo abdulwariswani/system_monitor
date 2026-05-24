@@ -1,4 +1,4 @@
-import os , shutil  , time
+import subprocess , shutil  , time
 def parse_cpu_stat():
         with open ('/proc/stat', 'r') as file:
             first_line = file.readline()
@@ -32,7 +32,7 @@ def get_cpu_percentage(store):
     idle_diff = new_idle - old_idle
 
     if total_diff == 0:
-        return "CPU usage: 0.00%"
+        return 0.00
     
     cpu_usage = ((total_diff - idle_diff)/total_diff)*100 
     return cpu_usage 
@@ -71,10 +71,10 @@ def Disk_used():
     disk_usage = (gb_used /gb_total)*100
 
 
-    print(f'Percentage of Memory used: {disk_usage:.2f}%')
-    print(f'Total available memory: {gb_total:.2f}GB')
-    print(f'Memmory used: {gb_used:.2f}GB')
-    print(f'Avaliable memory: {gb_free:.2f}GB')
+    print(f'Percentage of Disk used: {disk_usage:.2f}%')
+    print(f'Total available Disk: {gb_total:.2f}GB')
+    print(f'Disk used: {gb_used:.2f}GB')
+    print(f'Avaliable Disk: {gb_free:.2f}GB')
     return disk_usage
 
 
@@ -96,10 +96,23 @@ def check_thresholds(cpu_usage: float, ram_usage: float, disk_usage: float) -> N
 
     if disk_usage >= thresholds["disk"]:
         print(f"[ALERT] Disk usage is high: {disk_usage:.2f}%")
+
+
+def service_check() :
+    check = ['sshd','cron','NetworkManager']
+    for service in check:
+        result = subprocess.run(['systemctl','is-active', service ], capture_output = True ,text= True)
+        status = result.stdout.strip()
+        if status in ['active', 'inactive', 'failed']:
+            print(f'The service {service} is {status}')
+    
+
+
  
 
 
 while True:
+    service_check()
     value_1 = parse_cpu_stat()
     queue(value_1)   
     CPU_usage = get_cpu_percentage(store)
